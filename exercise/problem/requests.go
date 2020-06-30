@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -8,10 +9,11 @@ import (
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
 	var wg sync.WaitGroup
 
 	sites := []string{
-		"https://www.google.com",
+		//"https://wwsdgsdgw.google.com",
 		"https://drive.google.com",
 		"https://maps.google.com",
 		"https://hangouts.google.com",
@@ -19,13 +21,21 @@ func main() {
 	wg.Add(len(sites))
 
 	for _, site := range sites {
+		//time.Sleep(time.Millisecond * 250)
 		go func(site string) {
-			res, err := http.Get(site)
-			if err != nil {
+			defer wg.Done()
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				res, err := http.Get(site)
+				if err != nil {
+					io.WriteString(os.Stdout, "Error: "+err.Error()+"\n")
+					cancel()
+				} else {
+					io.WriteString(os.Stdout, res.Status+"\n")
+				}
 			}
-
-			io.WriteString(os.Stdout, res.Status+"\n")
-			wg.Done()
 		}(site)
 	}
 	wg.Wait()
