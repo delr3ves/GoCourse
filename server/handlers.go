@@ -20,6 +20,18 @@ func greetHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-	greeter := defaultCachedGreeter
-	fmt.Fprint(w, greeter.SayHi(t, sayHi))
+	executor := getEffectiveGreeter(r)
+
+	fmt.Fprint(w, executor(t))
+}
+
+func getEffectiveGreeter(r *http.Request) func(greet.Greet) string {
+	var decorator = r.Context().Value("greetDecorator")
+	var executor func(greet.Greet) string
+	if decorator == nil {
+		executor = sayHi
+	} else {
+		executor = decorator.(func(func(greet.Greet) string) func(greet.Greet) string)(sayHi)
+	}
+	return executor
 }

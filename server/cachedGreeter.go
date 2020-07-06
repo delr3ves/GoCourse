@@ -7,16 +7,12 @@ type cachedGreeter struct {
 	cache cache
 }
 
-func (greeter cachedGreeter) SayHi(greet greet.Greet, f func(greet.Greet) string) string {
-	cached, ok := greeter.cache.FindByName(greet.Name)
-	if !ok {
-		cached = greeter.cache.AddName(greet.Name, f(greet))
+func (greeter cachedGreeter) SayHi(f func(greet.Greet) string) func(greet2 greet.Greet) string {
+	return func (greet greet.Greet) string{
+		cached, ok := greeter.cache.FindByName(greet.Name)
+		if !ok {
+			cached = greeter.cache.AddName(greet.Name, f(greet))
+		}
+		return cached
 	}
-	return cached
-}
-
-var defaultCachedGreeter = &cachedGreeter{
-	cache: cache{
-		byName: make(map[string]string),
-	},
 }

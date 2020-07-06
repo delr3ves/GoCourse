@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -36,5 +37,19 @@ func Delay(delay time.Duration, h http.HandlerFunc) http.HandlerFunc {
 		defer h.ServeHTTP(w, r)
 
 		time.Sleep(delay)
+	}
+}
+
+
+func Cached(h http.HandlerFunc) http.HandlerFunc {
+	var cachedGreeter = &cachedGreeter{
+		cache: cache{
+			byName: make(map[string]string),
+		},
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		cacheableRequest := r.WithContext(context.WithValue(r.Context(), "greetDecorator", cachedGreeter.SayHi))
+		h.ServeHTTP(w, cacheableRequest)
 	}
 }

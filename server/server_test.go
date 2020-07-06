@@ -31,6 +31,40 @@ func Test_Greet(t *testing.T) {
 			Name: "Cached case",
 			Greet: greet.Greet{
 				Name:     "John Doe",
+				Location: "Non cached value will override this",
+			},
+			Wanted: "Hello John Doe, from Non cached value will override this\n",
+		},
+		{
+			Name: "void case",
+			Greet: greet.Greet{
+				Name:     "",
+				Location: "",
+			},
+			Wanted: "Tell us what is your name and where do you come from!\n",
+		},
+	}
+	executeTest(t, tt, POST(greetHandler))
+}
+
+func Test_CachedGreet(t *testing.T) {
+	tt := []struct {
+		Name   string
+		Greet  greet.Greet
+		Wanted string
+	}{
+		{
+			Name: "Green case",
+			Greet: greet.Greet{
+				Name:     "John Doe",
+				Location: "NY",
+			},
+			Wanted: "Hello John Doe, from NY\n",
+		},
+		{
+			Name: "Cached case",
+			Greet: greet.Greet{
+				Name:     "John Doe",
 				Location: "Cached value will override this",
 			},
 			Wanted: "Hello John Doe, from NY\n",
@@ -45,6 +79,14 @@ func Test_Greet(t *testing.T) {
 		},
 	}
 
+	executeTest(t, tt, POST(Cached(greetHandler)))
+}
+
+func executeTest(t *testing.T, tt []struct {
+	Name   string
+	Greet  greet.Greet
+	Wanted string
+}, greetHandler http.HandlerFunc) {
 	for _, tc := range tt {
 		t.Run(tc.Name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
