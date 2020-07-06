@@ -28,6 +28,14 @@ func Test_Greet(t *testing.T) {
 			Wanted: "Hello John Doe, from NY\n",
 		},
 		{
+			Name: "Cached case",
+			Greet: greet.Greet{
+				Name:     "John Doe",
+				Location: "Cached value will override this",
+			},
+			Wanted: "Hello John Doe, from NY\n",
+		},
+		{
 			Name: "void case",
 			Greet: greet.Greet{
 				Name:     "",

@@ -3,10 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pabloos/http/greet"
 	"io"
 	"net/http"
-
-	"github.com/pabloos/http/greet"
 )
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -21,11 +20,6 @@ func greetHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 400)
 		return
 	}
-
-	if t.Name == "" || t.Location == "" {
-		fmt.Fprintf(w, "Tell us what is your name and where do you come from!\n")
-		return
-	}
-
-	fmt.Fprintf(w, "Hello %s, from %s\n", t.Name, t.Location)
+	greeter := defaultCachedGreeter
+	fmt.Fprint(w, greeter.SayHi(t, sayHi))
 }
