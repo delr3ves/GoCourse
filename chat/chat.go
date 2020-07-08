@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"fmt"
 	"io"
 	"net"
 )
@@ -16,17 +15,21 @@ func (chat Chat) AddUser(conn net.Conn) Users {
 }
 
 func (chat Chat) ProcessMessage(conn net.Conn, msg string) {
-	chat.Users.ForEach(sendMessageToEveryone(conn, msg))
-}
-
-func sendMessageToEveryone(conn net.Conn, msg string) func(user User) {
-	return func(user User) {
-		var message string
-		if user.conn.RemoteAddr().String() != conn.RemoteAddr().String() {
-			message = fmt.Sprintf("[%s]: %s\n", conn.RemoteAddr().String(), msg)
-		} else {
-			message = fmt.Sprintf("[you]: %s\n", msg)
+	chainOfResponsibility := []func(conn net.Conn, msg string, chat Chat) bool {
+		UpdateUser,
+		ListUsers,
+		WhoAmI,
+		SendMessage,
+	}
+	for _, action := range chainOfResponsibility{
+		processed := action(conn, msg, chat)
+		if (processed) {
+			return
 		}
-		io.WriteString(user.conn, message)
 	}
 }
+
+func (chat Chat) SendMessage(conn net.Conn, msg string) {
+	io.WriteString(conn, msg)
+}
+
