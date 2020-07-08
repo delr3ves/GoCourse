@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"github.com/delr3ves/GoCourse/chat"
 	"io"
 	"log"
 	"net"
@@ -16,7 +17,11 @@ func main() {
 
 	log.Printf("Chat server started on :8888")
 
-	var users []net.Conn
+	chatRoom := chat.Chat{
+		Users: chat.Users{
+			Users: make(map[string]chat.User),
+		},
+	}
 
 	for {
 		conn, err := listener.Accept()
@@ -25,9 +30,9 @@ func main() {
 			continue
 		}
 
-		io.WriteString(conn, "Bienvenido al chat de GDG Marbella!\n")
+		io.WriteString(conn, "Bienvenido al Chat de GDG Marbella!\n")
 
-		users = append(users, conn)
+		chatRoom.AddUser(conn)
 
 		go func() {
 			for {
@@ -36,12 +41,7 @@ func main() {
 					log.Println(err)
 					continue
 				}
-
-				for _, user := range users {
-					if user.RemoteAddr().String() != conn.RemoteAddr().String() {
-						io.WriteString(user, msg)
-					}
-				}
+				chatRoom.ProcessMessage(conn, msg)
 			}
 		}()
 	}
