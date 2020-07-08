@@ -2,10 +2,10 @@ package main
 
 import (
 	"bufio"
-	"github.com/delr3ves/GoCourse/chat"
 	"io"
 	"log"
 	"net"
+	"github.com/delr3ves/GoCourse/chat"
 )
 
 func main() {
@@ -38,7 +38,11 @@ func main() {
 			for {
 				msg, err := bufio.NewReader(conn).ReadString('\n')
 				if err != nil {
-					log.Println(err)
+					if err == io.EOF {
+						chatRoom.Users.RemoveUser(conn)
+					} else {
+						log.Println(err)
+					}
 					continue
 				}
 				chatRoom.ProcessMessage(conn, msg)

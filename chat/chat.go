@@ -23,9 +23,9 @@ func sendMessageToEveryone(conn net.Conn, msg string) func(user User) {
 	return func(user User) {
 		var message string
 		if user.conn.RemoteAddr().String() != conn.RemoteAddr().String() {
-			message = fmt.Sprintf("[%s]: %s", conn.RemoteAddr().String(), msg)
+			message = fmt.Sprintf("[%s]: %s\n", conn.RemoteAddr().String(), msg)
 		} else {
-			message = fmt.Sprintf("[you]: %s", msg)
+			message = fmt.Sprintf("[you]: %s\n", msg)
 		}
 		io.WriteString(user.conn, message)
 	}
