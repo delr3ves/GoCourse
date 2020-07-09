@@ -40,9 +40,10 @@ func main() {
 				if err != nil {
 					if err == io.EOF {
 						chatRoom.Users.RemoveUser(conn)
-					} else {
-						log.Println(err)
+						break
 					}
+					conn.Close()
+					log.Println(err)
 					continue
 				}
 				chatRoom.ProcessMessage(conn, msg)
