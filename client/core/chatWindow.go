@@ -1,65 +1,34 @@
 package core
 
 import (
+	"fmt"
 	"log"
-
 	"github.com/marcusolsson/tui-go"
 )
 
 type ChatWindow struct {
-	messages []string
-	currentMessage string
 	sender MessageSender
 }
 
-func NewChatWindow(messages []string, sender MessageSender) ChatWindow {
+func NewChatWindow(sender MessageSender) ChatWindow {
 	return ChatWindow{
-		messages: messages,
 		sender: sender,
-		currentMessage: "",
 	}
 }
 
-func (chat *ChatWindow) PrintMessage(message string) {
-	chat.messages = append(chat.messages, message)
-	chat.render()
-}
-
-func (chatWindow ChatWindow) render() {
+func (chatWindow ChatWindow) Init(messageProcessor *MessageReceivedCallback) {
 	history := tui.NewVBox()
-
-	for _, message := range chatWindow.messages {
-		history.Append(tui.NewHBox(
-			tui.NewLabel(message),
-			tui.NewSpacer(),
-		))
-	}
 	historyScroll := tui.NewScrollArea(history)
 	historyScroll.SetAutoscrollToBottom(true)
-
 	historyBox := tui.NewVBox(historyScroll)
 	historyBox.SetBorder(true)
 
-	input := tui.NewEntry()
-	input.SetFocused(true)
-	input.SetSizePolicy(tui.Expanding, tui.Maximum)
-	input.SetText(chatWindow.currentMessage)
+	messageProcessor.messageBox = history
 
-	inputBox := tui.NewHBox(input)
-	inputBox.SetBorder(true)
-	inputBox.SetSizePolicy(tui.Expanding, tui.Maximum)
+	inputBox := chatWindow.configureInput(messageProcessor)
 
-	chat := tui.NewVBox(historyBox, input)
+	chat := tui.NewVBox(historyBox, inputBox)
 	chat.SetSizePolicy(tui.Expanding, tui.Expanding)
-
-	input.OnSubmit(func(e *tui.Entry) {
-		chatWindow.sender.sendMessage(e.Text())
-		input.SetText("")
-	})
-
-	input.OnChanged(func(e *tui.Entry) {
-		chatWindow.currentMessage = e.Text()
-	})
 
 	ui, err := tui.New(chat)
 	if err != nil {
@@ -71,4 +40,21 @@ func (chatWindow ChatWindow) render() {
 	if err := ui.Run(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (chatWindow ChatWindow) configureInput(callback *MessageReceivedCallback) *tui.Box {
+	input := tui.NewEntry()
+	input.SetFocused(true)
+	input.SetSizePolicy(tui.Expanding, tui.Maximum)
+
+	input.OnSubmit(func(e *tui.Entry) {
+		chatWindow.sender.sendMessage(e.Text())
+		callback.OnMessageReceived(fmt.Sprintf("%s", e.Text()))
+		input.SetText("")
+	})
+
+	inputBox := tui.NewHBox(input)
+	inputBox.SetBorder(true)
+	inputBox.SetSizePolicy(tui.Expanding, tui.Maximum)
+	return inputBox
 }

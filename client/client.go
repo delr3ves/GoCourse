@@ -30,20 +30,18 @@ func main() {
 	}
 	defer conn.Close()
 	chatWindow := core.NewChatWindow(
-		[]string{},
 		core.NewMessageSender(conn),
 	)
+	messageProcessor := &core.MessageReceivedCallback{}
 
-	for {
-		go receiveMessages(conn, &chatWindow)()
-	}
+	go receiveMessages(conn, messageProcessor)
+
+	chatWindow.Init(messageProcessor)
 }
 
-func receiveMessages(conn *net.TCPConn, chatWindow *core.ChatWindow) func() {
-	return func() {
-		for {
-			message, _ := bufio.NewReader(conn).ReadString('\n')
-			chatWindow.PrintMessage(strings.TrimRight(message, "\n"))
-		}
+func receiveMessages(conn *net.TCPConn, messageProcessor *core.MessageReceivedCallback) {
+	for {
+		message, _ := bufio.NewReader(conn).ReadString('\n')
+		messageProcessor.OnMessageReceived(strings.TrimRight(message, "\n"))
 	}
 }
