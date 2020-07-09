@@ -3,8 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"github.com/delr3ves/GoCourse/client/core"
 	"net"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -27,30 +29,21 @@ func main() {
 		os.Exit(1)
 	}
 	defer conn.Close()
+	chatWindow := core.NewChatWindow(
+		[]string{},
+		core.NewMessageSender(conn),
+	)
+
 	for {
-		go receiveMessages(conn)()
-		go sendMessages(conn)()
+		go receiveMessages(conn, &chatWindow)()
 	}
 }
 
-func receiveMessages(conn *net.TCPConn) func() {
+func receiveMessages(conn *net.TCPConn, chatWindow *core.ChatWindow) func() {
 	return func() {
 		for {
 			message, _ := bufio.NewReader(conn).ReadString('\n')
-			fmt.Print(message)
-		}
-	}
-}
-
-func sendMessages(conn *net.TCPConn) func() {
-	return func() {
-		for {
-			//read in input from stdin
-			reader := bufio.NewReader(os.Stdin)
-			text, _ := reader.ReadString('\n')
-
-			//send to socket
-			fmt.Fprintln(conn, text)
+			chatWindow.PrintMessage(strings.TrimRight(message, "\n"))
 		}
 	}
 }
