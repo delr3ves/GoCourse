@@ -38,13 +38,10 @@ func main() {
 			for {
 				msg, err := bufio.NewReader(conn).ReadString('\n')
 				if err != nil {
-					if err == io.EOF {
-						chatRoom.Users.RemoveUser(conn)
-						break
-					}
+					chatRoom.Users.RemoveUser(conn)
 					conn.Close()
 					log.Println(err)
-					continue
+					break
 				}
 				chatRoom.ProcessMessage(conn, msg)
 			}

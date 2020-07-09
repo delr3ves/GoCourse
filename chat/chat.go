@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"fmt"
 	"io"
 	"net"
 )
@@ -30,6 +31,6 @@ func (chat Chat) ProcessMessage(conn net.Conn, msg string) {
 }
 
 func (chat Chat) SendMessage(conn net.Conn, msg string) {
-	io.WriteString(conn, msg)
+	io.WriteString(conn, fmt.Sprintf("%s\n",msg))
 }
 
